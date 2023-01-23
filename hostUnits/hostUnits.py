@@ -1,5 +1,6 @@
 #! /usr/bin/python
 from dynatrace import Dynatrace
+import csv
 import matplotlib.pyplot as plt
 from typing import List
 
@@ -30,8 +31,8 @@ envs = [dtClient1, dtClient2]
 # List containing the Host Group Names
 hostGroups = []
 
-# List containing the Host Units consumptions for Host Groups
-# Each index will contain the host units for the corresponding index in the hostGroups list.
+# List containing the Host Unit consumptions for Host Groups
+# Each index will contain the Host Units for the corresponding index in the hostGroups list.
 huComsumptions = []
 
 # Iterate through environments to get all hosts from multiple environments
@@ -39,7 +40,7 @@ for env in envs:
     # Get a list of all hosts in the current environment
     hosts = env.smartscape_hosts.list()
 
-    # Interate though the hosts
+    # Interate through the hosts
     for host in hosts:
         # If the current hostgroup is already in the list, add the hosts HU to the huConsumption list
         if host.host_group.name in hostGroups:
@@ -51,5 +52,16 @@ for env in envs:
             hostGroups.append(host.host_group.name)
             huComsumptions.append(host.consumed_host_units)
 
+# Write a csv file with a line for each Host Group
+with open('huConsumption.csv', 'w') as file:
+    # create the csv writer
+    writer = csv.writer(file)
+
+    for i in range(len(hostGroups)):
+        file.write("{},{}\n".format(hostGroups[i], huComsumptions[i]))
+
+    file.close()
+
 # Generate a pie chart with a slice for each Host Group
 generatePieChart("huPie", huComsumptions, hostGroups)
+

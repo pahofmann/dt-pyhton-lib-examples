@@ -8,9 +8,8 @@ dtORP = Dynatrace(
     "dt0c01.PUBLIC.PRIVATE",
 )
 
-
-# Properties for the extensions
-# Can be found in plugin.json
+# Properties for the extension, as some might be shared between all endpoints
+# Can be found in plugin.json of the extensions .zip bundle  
 properties = {
     "api_token": "superSecretToken",
     "api_url": "https://YOURENVID.live.dynatrace.com",
@@ -27,15 +26,22 @@ properties = {
     "test_target_ports": "",
 }
 
-# Workaround to get AG instance from existing test
-instance = dtORP.extensions.get_instance(
-    "custom.remote.python.thirdparty_port", "EXISTINGTESTID"
-)
-pluginAG = instance.active_gate
+# Instance of the plugin enabled Active Gate the extension should run on
+# The extension needs to be present on the AG
+# You can use a specific AG, we just use the first one here
+# Get a list of all ActiveGates with the plugin module enabled
+pluginAGs = dtORP.extensions.list_activegate_extension_modules()._get_next_page()
+
+# Error if there are none, else use the first one
+if len(pluginAGs) < 1:
+    print("No Activegates with enabled Plugin Module found.")
+else:
+    pluginActiveGate = pluginAGs[0]
+
 
 # Open serverlist csv
-with open("serverlist.csv", "r") as serverlist:
-    serverReader = csv.reader(serverlist, delimiter=";")
+with open("serverList.csv", "r") as serverList:
+    serverReader = csv.reader(serverList, delimiter=";")
 
     # Skip header line
     next(serverReader)
@@ -53,7 +59,7 @@ with open("serverlist.csv", "r") as serverlist:
             "custom.remote.python.thirdparty_port",
             properties,
             endpoint_name=server[0],
-            activegate=pluginAG,
+            activegate=pluginActiveGate,
             enabled=False,
         )
 
